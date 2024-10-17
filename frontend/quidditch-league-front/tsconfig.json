@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2017",              
+    "module": "es6",             
+    "outDir": "./public/js",          
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "lib": ["es2017", "dom"]
+  },
+  "include": ["public/js/**/*.ts"],
+  "exclude": ["node_modules"]
+}
