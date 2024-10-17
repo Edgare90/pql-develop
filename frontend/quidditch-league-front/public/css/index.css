@@ -1,0 +1,54 @@
+.container {
+    max-width: 900px;
+    margin: 0 auto; /* Centrar horizontalmente */
+    padding: 20px;
+  }
+  
+    body {
+    padding: 20px;
+    background-color: #f8f9fa;
+  }
+  
+  h1 {
+    margin-bottom: 30px;
+  }
+  
+  form {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .table {
+    margin-top: 20px;
+  }
+  
+  
+  .subtitle {
+    font-size: 2rem;
+    color: #6c757d;
+    margin-bottom: 20px;
+    position: relative;
+    font-family: 'Cinzel', serif;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+  
+  .subtitle:hover {
+    color: #495057;
+  }
+  
+  
+  .subtitle::after {
+    content: "";
+    display: block;
+    width: 0;
+    height: 2px;
+    background: #495057;
+    transition: width 0.3s;
+  }
+  
+  .subtitle:hover::after {
+    width: 100%;
+  }
