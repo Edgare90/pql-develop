@@ -8,6 +8,7 @@ const teamForm = document.getElementById("team-form");
 const teamNameInput = document.getElementById("team-name");
 const teamNameError = document.getElementById("team-name-error");
 const createdTeams = [];
+const searchInput = document.getElementById("search-input");
 async function fetchTeams() {
     console.log("quiero recuperar los equipos");
     const response = await fetch("http://localhost:8000/api/teams");
@@ -120,6 +121,12 @@ document.addEventListener("click", (event) => {
         unassignedPlayers = unassignedPlayers.filter(player => player.id !== playerId);
         renderPlayers(unassignedPlayers);
     }
+});
+searchInput.addEventListener("input", () => {
+    const query = searchInput.value.trim().toLowerCase();
+    const filteredPlayers = unassignedPlayers.filter(player => player.name.toLowerCase().includes(query) ||
+        player.position.toLowerCase().includes(query));
+    renderPlayers(filteredPlayers);
 });
 fetchTeams();
 fetchPlayers();

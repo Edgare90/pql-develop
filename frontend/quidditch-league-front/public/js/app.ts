@@ -20,6 +20,7 @@ interface Player {
   const teamNameInput = document.getElementById("team-name") as HTMLInputElement;
   const teamNameError = document.getElementById("team-name-error")!;
   const createdTeams: string[] = [];
+  const searchInput = document.getElementById("search-input") as HTMLInputElement;
 
   async function fetchTeams() {
     console.log("quiero recuperar los equipos");
@@ -63,10 +64,21 @@ interface Player {
     return abilities[position] || "No special ability available";
  }
 
-/*Aqui mostramos a los jugadores no asigandos en la tabla, es decir, cargamos los td de la tabla. 
-  Mandamos llamar a la funcion que nos asiganrá de manera dinamica las habilidades*/
+/*Aqui mostramos a los jugadores no asigandos en la tabla, es decir, cargamos los td de la tabla.
+  Si no hay jugadores a mostrar lo indicamos
+  Si hay creamos los TD 
+  Mandamos llamar a la funcion que nos asiganrá de manera dinamica las habilidades
+  Renderizamos*/
 function renderPlayers(players: Player[]) {
     playersList.innerHTML = "";
+    if (players.length === 0) {
+        const noResultsRow = document.createElement("tr");
+        noResultsRow.innerHTML = `
+          <td colspan="4" class="text-center text-muted">No players found.</td>
+        `;
+        playersList.appendChild(noResultsRow);
+        return;
+    }
     players.forEach(player => {
         const ability = getSpecialAbility(player.position);
         console.log("habilidad",ability);
@@ -148,6 +160,21 @@ if (target.tagName === "BUTTON" && target.dataset.id) {
     unassignedPlayers = unassignedPlayers.filter(player => player.id !== playerId);
     renderPlayers(unassignedPlayers);
 }
+});
+
+/*Funcion para buscar en nuestro array
+  Podemos buscar por nombre o posicion
+  Atentos al evento input, cada vez que escribimos se llama a la funcion
+  Obtenemos el valor escrito y lo convertimos a minusculas, para buscar mejor
+  Usamos filter para buscar coincidencias en nombre o psicion
+  Renderizamos*/
+searchInput.addEventListener("input", () => {
+    const query = searchInput.value.trim().toLowerCase();
+    const filteredPlayers = unassignedPlayers.filter(player =>
+      player.name.toLowerCase().includes(query) || 
+      player.position.toLowerCase().includes(query)
+    );
+    renderPlayers(filteredPlayers);
 });
 
 fetchTeams();
