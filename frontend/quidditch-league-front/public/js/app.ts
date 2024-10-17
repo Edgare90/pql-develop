@@ -136,5 +136,19 @@ try {
 }
 });
 
+
+//vamos a manejar cualquier click en el documento, si es boton y tiene data.id, es un jugador
+//extraemos el id del jugador almacenado en el boton
+//filtramos en el array provisional de jugadores disponibles y eliminamos el id que traemos de arriba
+//volvemos a renderizar a los jugadores que aun quedanm, al tenerlos almacenados en un array provisional evitamos alguna modificacion en la BD
+document.addEventListener("click", (event) => {
+const target = event.target as HTMLButtonElement;
+if (target.tagName === "BUTTON" && target.dataset.id) {
+    const playerId = parseInt(target.dataset.id);
+    unassignedPlayers = unassignedPlayers.filter(player => player.id !== playerId);
+    renderPlayers(unassignedPlayers);
+}
+});
+
 fetchTeams();
 fetchPlayers();
