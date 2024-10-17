@@ -16,6 +16,10 @@ interface Player {
   const teamSelect = document.getElementById("team-select") as HTMLSelectElement;
   let unassignedPlayers: Player[] = [];
   const playersList = document.getElementById("players-list")!;
+  const teamForm = document.getElementById("team-form") as HTMLFormElement;
+  const teamNameInput = document.getElementById("team-name") as HTMLInputElement;
+  const teamNameError = document.getElementById("team-name-error")!;
+  const createdTeams: string[] = [];
 
   async function fetchTeams() {
     console.log("quiero recuperar los equipos");
@@ -46,7 +50,9 @@ interface Player {
     renderPlayers(unassignedPlayers );
   }
 
- //asignamos habilidades de forma dinamica segun la posicion del jugador
+ /*asignamos habilidades de forma dinamica segun la posicion del jugador 
+   si no hay una habilidad asignada para la posicion regresamos que no hay una habilidad especial disponible
+ */
  function getSpecialAbility(position: string): string {
     const abilities: { [key: string]: string } = {
         Seeker: "Enhanced Vision",
@@ -57,23 +63,78 @@ interface Player {
     return abilities[position] || "No special ability available";
  }
 
-    //Aqui mostramos a los jugadores no asigandos en la tabla, es decir, cargamos los td de la tabla
-    function renderPlayers(players: Player[]) {
-        playersList.innerHTML = "";
-        players.forEach(player => {
-          const ability = getSpecialAbility(player.position);
-          console.log("habilidad",ability);
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${player.name}</td>
-            <td>${player.age}</td>
-            <td>${player.position}</td>
-            <td>${ability}</td>
-            <td><button class="btn btn-danger btn-sm" data-id="${player.id}">Remove</button></td>
-          `;
-          playersList.appendChild(row);
-        });
-      }
+/*Aqui mostramos a los jugadores no asigandos en la tabla, es decir, cargamos los td de la tabla. 
+  Mandamos llamar a la funcion que nos asiganrá de manera dinamica las habilidades*/
+function renderPlayers(players: Player[]) {
+    playersList.innerHTML = "";
+    players.forEach(player => {
+        const ability = getSpecialAbility(player.position);
+        console.log("habilidad",ability);
+        const row = document.createElement("tr");
+        row.innerHTML = `
+        <td>${player.name}</td>
+        <td>${player.age}</td>
+        <td>${player.position}</td>
+        <td>${ability}</td>
+        <td><button class="btn btn-danger btn-sm" data-id="${player.id}">Remove</button></td>
+        `;
+        playersList.appendChild(row);
+    });
+    }
 
-  fetchTeams();
-  fetchPlayers();
+//efectos de validacion del equipo
+function isTeamNameUnique(name: string): boolean {
+return !createdTeams.includes(name.trim().toLowerCase());
+}
+
+
+/*Vamos a hacer el guardao de los equipos 
+se activa con el submit
+desactivamos el invalido
+con la API validamos que no exista el nombre
+    si existe marcamos error, 
+    si no existe guardamos en la BD y agregamos en nuestro array provisional
+    renderizamos el Drop de los equipos con el array provisional */
+teamForm.addEventListener("submit", async (event) => {
+event.preventDefault();
+const teamName = teamNameInput.value.trim();
+const teamDescription = (document.getElementById("team-description") as HTMLTextAreaElement).value;
+teamNameInput.classList.remove("is-invalid");
+teamNameError.textContent = "";
+if (!isTeamNameUnique(teamName)) {
+    teamNameInput.classList.add("is-invalid");
+    return;
+}
+
+teamNameInput.classList.remove("is-invalid");
+
+try {
+
+    const response = await fetch("http://localhost:8000/api/teams", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: teamName, description: teamDescription }),
+    });
+
+    if (!response.ok) {
+        console.log("Soy invalido");
+        const errorData = await response.json();
+        teamNameInput.classList.add("is-invalid");
+        teamNameError.textContent = errorData.error || "Failed to create team.";
+        return;
+    }
+
+    const newTeam: Team = await response.json();
+    teams.push(newTeam);
+    addTeamToDropdown(newTeam);
+
+    alert(`Equipo "${newTeam.name}" creado!`);
+    teamForm.reset();
+} catch (error) {
+    console.error("Error creating team:", error);
+    teamNameInput.classList.add("is-invalid");
+}
+});
+
+fetchTeams();
+fetchPlayers();

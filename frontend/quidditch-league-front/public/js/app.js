@@ -4,6 +4,10 @@ let teams = [];
 const teamSelect = document.getElementById("team-select");
 let unassignedPlayers = [];
 const playersList = document.getElementById("players-list");
+const teamForm = document.getElementById("team-form");
+const teamNameInput = document.getElementById("team-name");
+const teamNameError = document.getElementById("team-name-error");
+const createdTeams = [];
 async function fetchTeams() {
     console.log("quiero recuperar los equipos");
     const response = await fetch("http://localhost:8000/api/teams");
@@ -56,5 +60,48 @@ function renderPlayers(players) {
         playersList.appendChild(row);
     });
 }
+//efectos de validacion del equipo
+function isTeamNameUnique(name) {
+    return !createdTeams.includes(name.trim().toLowerCase());
+}
+//Vamos a hacer el guardao de los equipos 
+//se activa co el submit
+//desactivamos el invalido
+//con la API validamos que no exista el nombre, si existe marcamos error, si no existe guardamos y renderizamos el Drop de los equipos
+teamForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const teamName = teamNameInput.value.trim();
+    const teamDescription = document.getElementById("team-description").value;
+    teamNameInput.classList.remove("is-invalid");
+    teamNameError.textContent = "";
+    if (!isTeamNameUnique(teamName)) {
+        teamNameInput.classList.add("is-invalid");
+        return;
+    }
+    teamNameInput.classList.remove("is-invalid");
+    try {
+        const response = await fetch("http://localhost:8000/api/teams", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: teamName, description: teamDescription }),
+        });
+        if (!response.ok) {
+            console.log("Soy invalido");
+            const errorData = await response.json();
+            teamNameInput.classList.add("is-invalid");
+            teamNameError.textContent = errorData.error || "Failed to create team.";
+            return;
+        }
+        const newTeam = await response.json();
+        teams.push(newTeam);
+        addTeamToDropdown(newTeam);
+        alert(`Equipo "${newTeam.name}" creado!`);
+        teamForm.reset();
+    }
+    catch (error) {
+        console.error("Error creating team:", error);
+        teamNameInput.classList.add("is-invalid");
+    }
+});
 fetchTeams();
 fetchPlayers();
