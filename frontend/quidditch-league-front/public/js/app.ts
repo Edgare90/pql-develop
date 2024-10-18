@@ -23,6 +23,8 @@ interface Player {
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
   const tableHeaders = document.querySelectorAll(".sortable");
   const ExcelJS = (window as any).ExcelJS;
+  let currentPage = 1;
+  const itemsPerPage = 5;
 
   async function fetchTeams() {
     console.log("quiero recuperar los equipos");
@@ -50,7 +52,8 @@ interface Player {
     const response = await fetch("http://localhost:8000/api/players/unassigned");
     unassignedPlayers = await response.json();
     console.log(unassignedPlayers);
-    renderPlayers(unassignedPlayers );
+    renderPlayers(getPaginatedPlayers(unassignedPlayers, currentPage));
+    renderPagination(unassignedPlayers.length);
   }
 
  /*asignamos habilidades de forma dinamica segun la posicion del jugador 
@@ -94,7 +97,8 @@ function renderPlayers(players: Player[]) {
         `;
         playersList.appendChild(row);
     });
-    }
+    renderPagination(players.length);
+}
 
 //efectos de validacion del equipo
 function isTeamNameUnique(name: string): boolean {
@@ -248,11 +252,57 @@ notification.style.cssText = `
 notificationContainer.appendChild(notification);
 
 setTimeout(() => {
-    notification.style.opacity = "0";
-    setTimeout(() => notificationContainer.removeChild(notification), 800);
+notification.style.opacity = "0";
+setTimeout(() => notificationContainer.removeChild(notification), 800);
 }, 3000);
 }
 
+/*Paginador 1
+  Dos parametros de entrada: players(array de jugadores) page(numero de la pagina qu estamos viendo)
+  Con slice seleccionamos una porcion del array (donde empieza, donde termina) */
+function getPaginatedPlayers(players: Player[], page: number): Player[] {
+const startIndex = (page - 1) * itemsPerPage;
+return players.slice(startIndex, startIndex + itemsPerPage);
+}
+
+/*Paginador 2
+  Botones del Paginador
+  Recibe el numero de jugadores
+  Limpiamos el contenedor para no encimar los botones
+  Calculamos el total de paginas redondeando hacia arriba
+  Si el total de paginas es menor o igaul a uno, nonecesitamos botones, se ocultan
+  Con el for creamos un boton por pagina, agregamos estilo y agregamos clase 'active' si el boton es la pagina actual
+  Agregamos un evento click a cada boton
+  getPaginatedPlayers -> renderizamos los jugadores por pagina y por indice de esa pagina
+  renderPlayers -> rederizamos el resultado de la funcion interna en la tabla del HTML*/
+function renderPagination(totalItems: number) {
+const paginationContainer = document.getElementById("pagination")!;
+paginationContainer.innerHTML = "";
+
+const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+if (totalPages <= 1) {
+    paginationContainer.style.display = "none";
+    return;
+}
+
+paginationContainer.style.display = "flex";
+
+for (let i = 1; i <= totalPages; i++) {
+    const button = document.createElement("button");
+    button.textContent = i.toString();
+    button.classList.add("btn", "btn-primary", "m-1");
+    if (i === currentPage) button.classList.add("active");
+
+    button.addEventListener("click", () => {
+    currentPage = i;
+    renderPlayers(getPaginatedPlayers(unassignedPlayers, currentPage));
+    renderPagination(totalItems);
+    });
+
+    paginationContainer.appendChild(button);
+}
+}
 
 
 fetchTeams();

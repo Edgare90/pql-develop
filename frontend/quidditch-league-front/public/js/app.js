@@ -11,6 +11,8 @@ const createdTeams = [];
 const searchInput = document.getElementById("search-input");
 const tableHeaders = document.querySelectorAll(".sortable");
 const ExcelJS = window.ExcelJS;
+let currentPage = 1;
+const itemsPerPage = 5;
 async function fetchTeams() {
     console.log("quiero recuperar los equipos");
     const response = await fetch("http://localhost:8000/api/teams");
@@ -34,7 +36,8 @@ async function fetchPlayers() {
     const response = await fetch("http://localhost:8000/api/players/unassigned");
     unassignedPlayers = await response.json();
     console.log(unassignedPlayers);
-    renderPlayers(unassignedPlayers);
+    renderPlayers(getPaginatedPlayers(unassignedPlayers, currentPage));
+    renderPagination(unassignedPlayers.length);
 }
 /*asignamos habilidades de forma dinamica segun la posicion del jugador
   si no hay una habilidad asignada para la posicion regresamos que no hay una habilidad especial disponible
@@ -76,6 +79,7 @@ function renderPlayers(players) {
         `;
         playersList.appendChild(row);
     });
+    renderPagination(players.length);
 }
 //efectos de validacion del equipo
 function isTeamNameUnique(name) {
@@ -208,6 +212,34 @@ function showNotification(giveMessage, type = "success") {
         notification.style.opacity = "0";
         setTimeout(() => notificationContainer.removeChild(notification), 800);
     }, 3000);
+}
+/*Paginador*/
+function getPaginatedPlayers(players, page) {
+    const startIndex = (page - 1) * itemsPerPage;
+    return players.slice(startIndex, startIndex + itemsPerPage);
+}
+function renderPagination(totalItems) {
+    const paginationContainer = document.getElementById("pagination");
+    paginationContainer.innerHTML = "";
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (totalPages <= 1) {
+        paginationContainer.style.display = "none";
+        return;
+    }
+    paginationContainer.style.display = "flex";
+    for (let i = 1; i <= totalPages; i++) {
+        const button = document.createElement("button");
+        button.textContent = i.toString();
+        button.classList.add("btn", "btn-primary", "m-1");
+        if (i === currentPage)
+            button.classList.add("active");
+        button.addEventListener("click", () => {
+            currentPage = i;
+            renderPlayers(getPaginatedPlayers(unassignedPlayers, currentPage));
+            renderPagination(totalItems);
+        });
+        paginationContainer.appendChild(button);
+    }
 }
 fetchTeams();
 fetchPlayers();
