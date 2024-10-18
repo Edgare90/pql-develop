@@ -21,6 +21,8 @@ interface Player {
   const teamNameError = document.getElementById("team-name-error")!;
   const createdTeams: string[] = [];
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
+  const tableHeaders = document.querySelectorAll(".sortable");
+  const ExcelJS = (window as any).ExcelJS;
 
   async function fetchTeams() {
     console.log("quiero recuperar los equipos");
@@ -176,6 +178,47 @@ searchInput.addEventListener("input", () => {
     );
     renderPlayers(filteredPlayers);
 });
+
+
+/*Funcion para la creacion de un archivo de excel con los registros de los jugadores
+  Recibe como parametro playeres del tipo Player
+  Asiganamos el nombre de los encabezados del documento
+  recorremos nuestro array para obtener los registros
+  agregamos los row al archivo
+  generamos el archivo*/
+async function exportToExcel(players: Player[]) {
+const workbook = new ExcelJS.Workbook();
+const worksheet = workbook.addWorksheet("Players");
+
+worksheet.columns = [
+    { header: "ID", key: "id", width: 10 },
+    { header: "Name", key: "name", width: 30 },
+    { header: "Age", key: "age", width: 10 },
+    { header: "Position", key: "position", width: 20 }
+];
+
+players.forEach(player => worksheet.addRow(player));
+
+const buffer = await workbook.xlsx.writeBuffer();
+const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+});
+
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = "jugadores.xlsx";
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+}
+
+/*obtenemos el elemento boton por su id desde el HTML
+  le agregamos un listener para estar atentos al click en el boton y mandar llamar la funcion donde se genera el excel*/
+const exportButton = document.getElementById("export-excel")!;
+exportButton.addEventListener("click", () => exportToExcel(unassignedPlayers));
+
+
 
 fetchTeams();
 fetchPlayers();

@@ -9,6 +9,8 @@ const teamNameInput = document.getElementById("team-name");
 const teamNameError = document.getElementById("team-name-error");
 const createdTeams = [];
 const searchInput = document.getElementById("search-input");
+const tableHeaders = document.querySelectorAll(".sortable");
+const ExcelJS = window.ExcelJS;
 async function fetchTeams() {
     console.log("quiero recuperar los equipos");
     const response = await fetch("http://localhost:8000/api/teams");
@@ -47,9 +49,20 @@ function getSpecialAbility(position) {
     return abilities[position] || "No special ability available";
 }
 /*Aqui mostramos a los jugadores no asigandos en la tabla, es decir, cargamos los td de la tabla.
-  Mandamos llamar a la funcion que nos asiganrá de manera dinamica las habilidades*/
+  Si no hay jugadores a mostrar lo indicamos
+  Si hay creamos los TD
+  Mandamos llamar a la funcion que nos asiganrá de manera dinamica las habilidades
+  Renderizamos*/
 function renderPlayers(players) {
     playersList.innerHTML = "";
+    if (players.length === 0) {
+        const noResultsRow = document.createElement("tr");
+        noResultsRow.innerHTML = `
+          <td colspan="4" class="text-center text-muted">No players found.</td>
+        `;
+        playersList.appendChild(noResultsRow);
+        return;
+    }
     players.forEach(player => {
         const ability = getSpecialAbility(player.position);
         console.log("habilidad", ability);
@@ -122,11 +135,49 @@ document.addEventListener("click", (event) => {
         renderPlayers(unassignedPlayers);
     }
 });
+/*Funcion para buscar en nuestro array
+  Podemos buscar por nombre o posicion
+  Atentos al evento input, cada vez que escribimos se llama a la funcion
+  Obtenemos el valor escrito y lo convertimos a minusculas, para buscar mejor
+  Usamos filter para buscar coincidencias en nombre o psicion
+  Renderizamos*/
 searchInput.addEventListener("input", () => {
     const query = searchInput.value.trim().toLowerCase();
     const filteredPlayers = unassignedPlayers.filter(player => player.name.toLowerCase().includes(query) ||
         player.position.toLowerCase().includes(query));
     renderPlayers(filteredPlayers);
 });
+/*Funcion para la creacion de un archivo de excel con los registros de los jugadores
+  Recibe como parametro playeres del tipo Player
+  Asiganamos el nombre de los encabezados del documento
+  recorremos nuestro array para obtener los registros
+  agregamos los row al archivo
+  generamos el archivo*/
+async function exportToExcel(players) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Players");
+    worksheet.columns = [
+        { header: "ID", key: "id", width: 10 },
+        { header: "Name", key: "name", width: 30 },
+        { header: "Age", key: "age", width: 10 },
+        { header: "Position", key: "position", width: 20 }
+    ];
+    players.forEach(player => worksheet.addRow(player));
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "jugadores.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+/*obtenemos el elemento boton por su id desde el HTML
+  le agregamos un listener para estar atentos al click en el boton y mandar llamar la funcion donde se genera el excel*/
+const exportButton = document.getElementById("export-excel");
+exportButton.addEventListener("click", () => exportToExcel(unassignedPlayers));
 fetchTeams();
 fetchPlayers();
