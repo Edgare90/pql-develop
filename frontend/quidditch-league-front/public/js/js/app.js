@@ -7,7 +7,7 @@ const playersList = document.getElementById("players-list");
 const teamForm = document.getElementById("team-form");
 const teamNameInput = document.getElementById("team-name");
 const teamNameError = document.getElementById("team-name-error");
-export const createdTeams = [];
+const createdTeams = [];
 const searchInput = document.getElementById("search-input");
 const tableHeaders = document.querySelectorAll(".sortable");
 const ExcelJS = window.ExcelJS;
@@ -82,7 +82,7 @@ function renderPlayers(players) {
     renderPagination(players.length);
 }
 //efectos de validacion del equipo
-export function isTeamNameUnique(name) {
+function isTeamNameUnique(name) {
     return !createdTeams.includes(name.trim().toLowerCase());
 }
 /*Vamos a hacer el guardao de los equipos
@@ -213,11 +213,23 @@ function showNotification(giveMessage, type = "success") {
         setTimeout(() => notificationContainer.removeChild(notification), 800);
     }, 3000);
 }
-/*Paginador*/
+/*Paginador 1
+  Dos parametros de entrada: players(array de jugadores) page(numero de la pagina qu estamos viendo)
+  Con slice seleccionamos una porcion del array (donde empieza, donde termina) */
 function getPaginatedPlayers(players, page) {
     const startIndex = (page - 1) * itemsPerPage;
     return players.slice(startIndex, startIndex + itemsPerPage);
 }
+/*Paginador 2
+  Botones del Paginador
+  Recibe el numero de jugadores
+  Limpiamos el contenedor para no encimar los botones
+  Calculamos el total de paginas redondeando hacia arriba
+  Si el total de paginas es menor o igaul a uno, nonecesitamos botones, se ocultan
+  Con el for creamos un boton por pagina, agregamos estilo y agregamos clase 'active' si el boton es la pagina actual
+  Agregamos un evento click a cada boton
+  getPaginatedPlayers -> renderizamos los jugadores por pagina y por indice de esa pagina
+  renderPlayers -> rederizamos el resultado de la funcion interna en la tabla del HTML*/
 function renderPagination(totalItems) {
     const paginationContainer = document.getElementById("pagination");
     paginationContainer.innerHTML = "";

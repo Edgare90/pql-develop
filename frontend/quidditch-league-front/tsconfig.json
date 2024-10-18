@@ -7,8 +7,9 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "lib": ["es2017", "dom"]
+    "lib": ["es2017", "dom"],
+    "allowJs": true
   },
-  "include": ["public/js/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["public/js/**/*.ts", "public/validations/validations.ts"],
+  "exclude": ["node_modules", "__pruebas__"]
 }
