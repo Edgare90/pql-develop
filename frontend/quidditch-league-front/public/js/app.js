@@ -110,16 +110,19 @@ teamForm.addEventListener("submit", async (event) => {
             const errorData = await response.json();
             teamNameInput.classList.add("is-invalid");
             teamNameError.textContent = errorData.error || "Failed to create team.";
+            showNotification("Failed creating team.", "error");
             return;
         }
         const newTeam = await response.json();
         teams.push(newTeam);
         addTeamToDropdown(newTeam);
-        alert(`Equipo "${newTeam.name}" creado!`);
+        //alert(`Equipo "${newTeam.name}" creado!`);
+        showNotification(`Team "${newTeam.name}" created successfully!`);
         teamForm.reset();
     }
     catch (error) {
         console.error("Error creating team:", error);
+        showNotification("Strange error occurred.", "error");
         teamNameInput.classList.add("is-invalid");
     }
 });
@@ -179,5 +182,32 @@ async function exportToExcel(players) {
   le agregamos un listener para estar atentos al click en el boton y mandar llamar la funcion donde se genera el excel*/
 const exportButton = document.getElementById("export-excel");
 exportButton.addEventListener("click", () => exportToExcel(unassignedPlayers));
+/*Funcion para darle mas estilo a los mensajes ya sea de error(error) o de exito(success)
+  Recibe un mensaje (string) y un tipo (error o exito)
+  Creamos la notificacion
+  Le damos el estilo al cuadrito (color, tamaño etc)
+  Agregamos la notificacion al div en el HTML
+  Desaparecemos la notificacion en 8 segundos*/
+function showNotification(giveMessage, type = "success") {
+    const notificationContainer = document.getElementById("notification-container");
+    const notification = document.createElement("div");
+    notification.className = `notification ${type}`;
+    notification.textContent = giveMessage;
+    notification.style.cssText = `
+    background-color: ${type === "success" ? "#4caf50" : "#f44336"};
+    color: white;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    opacity: 1;
+    transition: opacity 0.5s ease;
+`;
+    notificationContainer.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = "0";
+        setTimeout(() => notificationContainer.removeChild(notification), 800);
+    }, 3000);
+}
 fetchTeams();
 fetchPlayers();
